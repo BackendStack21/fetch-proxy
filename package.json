@@ -1,0 +1,44 @@
+{
+  "name": "fetch-proxy",
+  "version": "1.0.0",
+  "description": "A fetch-based HTTP proxy library optimized for Bun runtime with hooks, circuit breakers and timeouts",
+  "main": "index.ts",
+  "module": "index.ts",
+  "types": "index.ts",
+  "type": "module",
+  "files": [
+    "src/**/*",
+    "index.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": ["proxy", "fetch", "http", "circuit-breaker", "timeout", "hooks", "bun", "typescript"],
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "dev": "bun run examples/debug.ts",
+    "format": "prettier --write src/**/*.ts",
+    "format:check": "prettier --check src/**/*.ts",
+    "test": "bun test --coverage tests/*.test.ts",
+    "test:watch": "bun test --watch tests/*.test.ts",
+    "lint": "bun run type-check",
+    "type-check": "tsc --noEmit",
+    "build": "tsc --project tsconfig.build.json",
+    "build:bun": "bun build src/index.ts --outdir lib --target bun",
+    "clean": "rm -rf lib/",
+    "prepublishOnly": "bun run clean && bun run build",
+    "example:gateway": "bun run examples/gateway-server.ts",
+    "example:debug": "bun run examples/debug.ts",
+    "example:loadbalancer": "bun run examples/load-balancer.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "prettier": "^3.5.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "bun": ">=1.0.0"
+  }
+}

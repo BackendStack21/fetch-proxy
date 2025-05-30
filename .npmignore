@@ -1,0 +1,24 @@
+# Development files
+*.test.ts
+tests/
+examples/
+docs/
+.git/
+.gitignore
+tsconfig.json
+bun.lock
+
+# Build artifacts
+node_modules/
+*.log
+*.tsbuildinfo
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
