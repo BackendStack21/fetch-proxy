@@ -16,7 +16,6 @@
   "author": "",
   "license": "MIT",
   "scripts": {
-    "dev": "bun run examples/debug.ts",
     "format": "prettier --write src/**/*.ts",
     "format:check": "prettier --check src/**/*.ts",
     "test": "bun test --coverage tests/*.test.ts",
