@@ -480,6 +480,9 @@ bun run example:gateway
 
 # Load balancer example
 bun run example:loadbalancer
+
+# Performance benchmark example
+bun run example:benchmark
 ```
 
 To build the library:

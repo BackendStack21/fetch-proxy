@@ -29,7 +29,9 @@
     "prepublishOnly": "bun run clean && bun run build",
     "example:gateway": "bun run examples/gateway-server.ts",
     "example:debug": "bun run examples/debug.ts",
-    "example:loadbalancer": "bun run examples/load-balancer.ts"
+    "example:loadbalancer": "bun run examples/load-balancer.ts",
+    "example:benchmark": "bun run examples/local-gateway-server.ts",
+    "example:simple": "bun run examples/simple-gateway.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
