@@ -2,13 +2,12 @@
   "name": "fetch-proxy",
   "version": "1.0.0",
   "description": "A fetch-based HTTP proxy library optimized for Bun runtime with hooks, circuit breakers and timeouts",
-  "main": "index.ts",
-  "module": "index.ts",
-  "types": "index.ts",
+  "main": "lib/index.js",
+  "module": "lib/index.js",
+  "types": "lib/index.d.ts",
   "type": "module",
   "files": [
-    "src/**/*",
-    "index.ts",
+    "lib/**/*",
     "README.md",
     "LICENSE"
   ],
