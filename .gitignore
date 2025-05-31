@@ -140,3 +140,6 @@ lib/
 
 # bun lock file
 bun.lockb
+
+# bun lock file
+bun.lock
