@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import createFetchProxy from "../src/index"
+import createFetchGate from "../src/index"
 import { normalizeSecurePath } from "../src/utils"
 
 // Backend file server
@@ -51,7 +51,7 @@ const backendServer = Bun.serve({
 })
 
 // Create proxy
-const { proxy } = createFetchProxy({
+const { proxy } = createFetchGate({
   base: "http://localhost:3001",
 })
 

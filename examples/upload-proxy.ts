@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import createFetchProxy from "../src/index"
+import createFetchGate from "../src/index"
 
 // Backend upload server
 const backendServer = Bun.serve({
@@ -20,10 +20,13 @@ const backendServer = Bun.serve({
           const formData = await req.formData()
           const entry = formData.get("file")
           if (!entry || !(entry instanceof File)) {
-            return new Response(JSON.stringify({ error: "No file provided or invalid file" }), {
-              status: 400,
-              headers: { "content-type": "application/json" },
-            })
+            return new Response(
+              JSON.stringify({ error: "No file provided or invalid file" }),
+              {
+                status: 400,
+                headers: { "content-type": "application/json" },
+              },
+            )
           }
           const file = entry
 
@@ -100,7 +103,7 @@ const backendServer = Bun.serve({
 })
 
 // Create proxy
-const { proxy } = createFetchProxy({
+const { proxy } = createFetchGate({
   base: "http://localhost:3001",
 })
 

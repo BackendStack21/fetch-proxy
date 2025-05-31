@@ -1,5 +1,5 @@
 {
-  "name": "fetch-proxy",
+  "name": "fetch-gate",
   "version": "1.0.0",
   "description": "A fetch-based HTTP proxy library optimized for Bun runtime with hooks, circuit breakers and timeouts",
   "main": "lib/index.js",
@@ -11,7 +11,7 @@
     "README.md",
     "LICENSE"
   ],
-  "keywords": ["proxy", "fetch", "http", "circuit-breaker", "timeout", "hooks", "bun", "typescript"],
+  "keywords": ["gateway", "proxy", "fetch", "http", "circuit-breaker", "timeout", "hooks", "bun", "typescript"],
   "author": "",
   "license": "MIT",
   "scripts": {
@@ -29,6 +29,7 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/node": "^22.15.29",
     "prettier": "^3.5.3"
   },
   "peerDependencies": {
@@ -36,5 +37,8 @@
   },
   "engines": {
     "bun": ">=1.0.0"
+  },
+  "dependencies": {
+    "pino": "^9.7.0"
   }
 }

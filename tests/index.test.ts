@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeAll, afterAll } from "bun:test"
-import createFetchProxy, { FetchProxy } from "../src/index"
+import { describe, it, expect, beforeAll, afterAll, mock } from "bun:test"
+import createFetchGate, { FetchProxy } from "../src/index"
 import {
   buildURL,
   headersToRecord,
@@ -10,7 +10,7 @@ import { CircuitBreaker } from "../src/circuit-breaker"
 import { URLCache } from "../src/url-cache"
 import { CircuitState } from "../src/types"
 
-describe("fetch-proxy", () => {
+describe("fetch-gate", () => {
   let server: any
   let baseUrl: string
 
@@ -55,17 +55,18 @@ describe("fetch-proxy", () => {
 
   afterAll(() => {
     server?.stop()
+    mock.restore()
   })
 
-  describe("createFetchProxy", () => {
+  describe("createFetchGate", () => {
     it("should create proxy instance with default options", () => {
-      const { proxy, close } = createFetchProxy()
+      const { proxy, close } = createFetchGate()
       expect(typeof proxy).toBe("function")
       expect(typeof close).toBe("function")
     })
 
     it("should create proxy instance with custom options", () => {
-      const { proxy, getCircuitBreakerState } = createFetchProxy({
+      const { proxy, getCircuitBreakerState } = createFetchGate({
         base: "https://api.example.com",
         timeout: 5000,
         circuitBreaker: {
@@ -166,7 +167,7 @@ describe("fetch-proxy", () => {
       })
 
       const response = await proxyInstance.proxy(req, "/echo", {
-        beforeRequest: async (req, options) => {
+        beforeRequest: async (req, opts) => {
           req.headers.set("rewritten", "true")
           req.headers.delete("original")
         },
@@ -406,14 +407,14 @@ describe("fetch-proxy", () => {
       expect(typeof fastProxy).toBe("function")
     })
 
-    it("should return all required methods from createFetchProxy", () => {
+    it("should return all required methods from createFetchGate", () => {
       const {
         proxy,
         close,
         getCircuitBreakerState,
         getCircuitBreakerFailures,
         clearURLCache,
-      } = createFetchProxy()
+      } = createFetchGate()
 
       expect(typeof proxy).toBe("function")
       expect(typeof close).toBe("function")
@@ -429,7 +430,7 @@ describe("fetch-proxy", () => {
         getCircuitBreakerFailures,
         clearURLCache,
         close,
-      } = createFetchProxy({
+      } = createFetchGate({
         base: baseUrl,
       })
 

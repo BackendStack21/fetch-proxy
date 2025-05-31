@@ -1,4 +1,8 @@
-import { describe, expect, test } from "bun:test"
+import { afterAll, describe, expect, test, mock } from "bun:test"
+
+afterAll(() => {
+  mock.restore()
+})
 
 describe("DoS and Resource Exhaustion Security Tests", () => {
   describe("Request Parameter Validation", () => {

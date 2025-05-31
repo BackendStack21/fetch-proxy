@@ -1,6 +1,10 @@
-import { describe, it, expect, beforeEach } from "bun:test"
+import { describe, it, expect, beforeEach, afterAll, mock } from "bun:test"
 import { validateHttpMethod } from "../src/utils"
 import { FetchProxy } from "../src/proxy"
+
+afterAll(() => {
+  mock.restore()
+})
 
 describe("HTTP Method Validation Security Tests", () => {
   describe("Direct Method Validation", () => {

@@ -10,7 +10,7 @@
  * Use this to benchmark fetch-proxy performance against direct requests.
  */
 
-import createFetchProxy from "../src/index"
+import createFetchGate from "../src/index"
 
 // Backend service that simulates a real API
 const backendServer = Bun.serve({
@@ -142,9 +142,9 @@ const backendServer = Bun.serve({
   },
 })
 
-// Create fetch-proxy instance for the gateway
+// Create fetch-gate instance for the gateway
 const { proxy, getCircuitBreakerState, getCircuitBreakerFailures } =
-  createFetchProxy({
+  createFetchGate({
     base: "http://localhost:3001",
     timeout: 5000,
     circuitBreaker: {
@@ -153,7 +153,7 @@ const { proxy, getCircuitBreakerState, getCircuitBreakerFailures } =
       enabled: true,
     },
     headers: {
-      "x-gateway": "fetch-proxy-benchmark",
+      "x-gateway": "fetch-gate-benchmark",
       "x-forwarded-by": "local-gateway",
     },
   })
@@ -164,7 +164,7 @@ let totalLatency = 0
 let errorCount = 0
 const requestTimes: number[] = []
 
-// Gateway server using fetch-proxy
+// Gateway server using fetch-gate
 const gatewayServer = Bun.serve({
   port: 3000,
   hostname: "localhost",

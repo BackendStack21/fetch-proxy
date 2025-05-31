@@ -1,5 +1,9 @@
-import { describe, it, expect } from "bun:test"
+import { describe, it, expect, afterAll, mock } from "bun:test"
 import { buildURL } from "../src/utils"
+
+afterAll(() => {
+  mock.restore()
+})
 
 describe("Security Tests", () => {
   describe("SSRF Prevention", () => {

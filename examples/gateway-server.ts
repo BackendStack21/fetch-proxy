@@ -3,14 +3,14 @@
 /**
  * Example: Simple Gateway Server
  *
- * This example shows how to create a simple API gateway using fetch-proxy
+ * This example shows how to create a simple API gateway using fetch-gate
  * that routes requests to different backend services.
  */
 
-import createFetchProxy from "../src/index"
+import createFetchGate from "../src/index"
 
 // Create proxy instances for different services
-const { proxy: usersProxy } = createFetchProxy({
+const { proxy: usersProxy } = createFetchGate({
   base: "https://jsonplaceholder.typicode.com",
   timeout: 5000,
   circuitBreaker: {
@@ -19,11 +19,11 @@ const { proxy: usersProxy } = createFetchProxy({
     enabled: true,
   },
   headers: {
-    "x-gateway": "fetch-proxy-example",
+    "x-gateway": "fetch-gate-example",
   },
 })
 
-const { proxy: postsProxy } = createFetchProxy({
+const { proxy: postsProxy } = createFetchGate({
   base: "https://jsonplaceholder.typicode.com",
   timeout: 5000,
   circuitBreaker: {

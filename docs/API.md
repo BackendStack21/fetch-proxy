@@ -1,4 +1,4 @@
-# fetch-proxy API Documentation
+# fetch-gate API Documentation
 
 ## Table of Contents
 
@@ -12,7 +12,7 @@
 
 ## Core API
 
-### `createFetchProxy(options?)`
+### `createFetchGate(options?)`
 
 Creates a new fetch proxy instance with the specified configuration.
 
@@ -32,7 +32,7 @@ Creates a new fetch proxy instance with the specified configuration.
 }
 ```
 
-### `proxy(req, source?, options?)`
+### `proxy(req, source?, opts?)`
 
 Proxies an HTTP request to the target server.
 
@@ -40,7 +40,7 @@ Proxies an HTTP request to the target server.
 
 - `req: Request` - The incoming request object
 - `source?: string` - Target URL or path (optional if base is set)
-- `options?: ProxyRequestOptions` - Per-request options
+- `opts?: ProxyRequestOptions` - Per-request options
 
 **Returns:**
 
@@ -141,7 +141,7 @@ interface ProxyRequestOptions {
 
 ## Hooks
 
-Hooks allow you to intercept and modify requests, responses, and handle errors. fetch-proxy provides enhanced hook naming conventions with better semantics and circuit breaker lifecycle hooks.
+Hooks allow you to intercept and modify requests, responses, and handle errors. fetch-gate provides enhanced hook naming conventions with better semantics and circuit breaker lifecycle hooks.
 
 ### Enhanced Hooks with Circuit Breaker Monitoring
 
@@ -247,13 +247,13 @@ When multiple hooks are configured, they execute in this order:
 
 ```typescript
 const response = await proxy(request, "/users", {
-  beforeRequest: async (req, options) => {
+  beforeRequest: async (req, opts) => {
     console.log("Making request to:", req.url)
   },
   afterResponse: async (req, res, body) => {
     console.log("Received response:", res.status)
   },
-  beforeCircuitBreakerExecution: async (req, options) => {
+  beforeCircuitBreakerExecution: async (req, opts) => {
     console.log("Circuit breaker executing request")
   },
   afterCircuitBreakerExecution: async (req, result) => {
@@ -424,4 +424,4 @@ See the [examples directory](../examples/) for complete working examples:
 
 - [Gateway Server](../examples/gateway-server.ts) - Basic proxy server
 - [Load Balancer](../examples/load-balancer.ts) - Round-robin load balancing
-- [Debug Script](../examples/debug.ts) - Testing and debugging
+- [Logging Example](../examples/logger-examples.ts) - Request/response logging

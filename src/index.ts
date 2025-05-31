@@ -1,5 +1,5 @@
 /**
- * fetch-proxy - A modern HTTP proxy library optimized for Bun runtime
+ * fetch-gate - A modern HTTP gateway library optimized for Bun runtime
  *
  * Features:
  * - Circuit breaker pattern for fault tolerance
@@ -42,9 +42,9 @@ export type {
 export { FetchProxy }
 
 /**
- * Factory function to create a new fetch proxy instance
+ * Factory function to create a new fetch gate instance
  */
-export default function createFetchProxy(options: ProxyOptions = {}): {
+export default function createFetchGate(options: ProxyOptions = {}): {
   proxy: (
     req: Request,
     source?: string,
@@ -68,4 +68,4 @@ export default function createFetchProxy(options: ProxyOptions = {}): {
 }
 
 // Export for CommonJS compatibility
-export { createFetchProxy as fastProxy }
+export { createFetchGate as fastProxy }

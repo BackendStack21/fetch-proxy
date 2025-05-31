@@ -1,9 +1,13 @@
 /**
  * Security tests for header injection vulnerabilities
  */
-import { describe, expect, it } from "bun:test"
+import { describe, expect, it, afterAll, mock } from "bun:test"
 
-import { recordToHeaders, headersToRecord } from "../src/utils"
+import { recordToHeaders } from "../src/utils"
+
+afterAll(() => {
+  mock.restore()
+})
 
 describe("Header Injection Security Tests", () => {
   describe("CRLF Header Injection", () => {
@@ -191,7 +195,7 @@ describe("Header Injection Security Tests", () => {
       expect(() => new Headers({ [maliciousHeaderName]: "value" })).toThrow()
       expect(() => new Headers({ "X-Test": maliciousHeaderValue })).toThrow()
 
-      // The fetch-proxy library inherits this protection via recordToHeaders
+      // The fetch-gate library inherits this protection via recordToHeaders
       expect(() =>
         recordToHeaders({ [maliciousHeaderName]: "value" }),
       ).toThrow()

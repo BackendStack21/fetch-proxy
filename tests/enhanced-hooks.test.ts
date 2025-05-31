@@ -2,7 +2,15 @@
  * Tests for enhanced hook naming conventions
  */
 
-import { describe, expect, it, beforeEach, jest } from "bun:test"
+import {
+  describe,
+  expect,
+  it,
+  beforeEach,
+  jest,
+  afterAll,
+  mock,
+} from "bun:test"
 import { FetchProxy } from "../src/proxy"
 import { CircuitState } from "../src/types"
 import type { ProxyRequestOptions, CircuitBreakerResult } from "../src/types"
@@ -10,6 +18,10 @@ import type { ProxyRequestOptions, CircuitBreakerResult } from "../src/types"
 // Mock fetch for testing
 const mockFetch = jest.fn()
 ;(global as any).fetch = mockFetch
+
+afterAll(() => {
+  mock.restore()
+})
 
 describe("Enhanced Hook Naming Conventions", () => {
   let proxy: FetchProxy

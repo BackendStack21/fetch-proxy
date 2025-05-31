@@ -1,6 +1,10 @@
-import { describe, it, expect } from "bun:test"
+import { describe, it, expect, mock, afterAll } from "bun:test"
 import { buildQueryString } from "../src/utils"
 import { FetchProxy } from "../src/proxy"
+
+afterAll(() => {
+  mock.restore()
+})
 
 describe("Query String Injection Security Tests", () => {
   describe("Parameter Name Validation", () => {

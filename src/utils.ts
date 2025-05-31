@@ -3,6 +3,7 @@
  */
 
 import { URL } from "url"
+import { ProxyLogger } from "./logger"
 
 /**
  * Allowed protocols for proxy requests
@@ -25,11 +26,26 @@ const ALLOWED_HTTP_METHODS = new Set([
 /**
  * Builds a URL from source and optional base with security validation
  */
-export function buildURL(source: string, base?: string): URL {
+export function buildURL(
+  source: string,
+  base?: string,
+  logger?: ProxyLogger,
+  requestId?: string,
+  req?: Request,
+): URL {
   // Check for protocol override attempts in relative URLs BEFORE normalization
   // Block exactly "//" which can cause protocol-relative URL attacks
   if (base && source.startsWith("//") && !source.startsWith("///")) {
-    throw new Error("Protocol override not allowed in relative URLs")
+    const error = new Error("Protocol override not allowed in relative URLs")
+    if (logger && req) {
+      logger.logSecurityEvent(
+        "protocol_validation",
+        req,
+        "Protocol override attempt detected in relative URL",
+        { requestId, source, base },
+      )
+    }
+    throw error
   }
 
   // Handle relative URLs with multiple leading slashes for security
@@ -50,7 +66,16 @@ export function buildURL(source: string, base?: string): URL {
       source.startsWith("/") &&
       !source.includes("://")
     ) {
-      throw new Error("Domain override not allowed in relative URLs")
+      const error = new Error("Domain override not allowed in relative URLs")
+      if (logger && req) {
+        logger.logSecurityEvent(
+          "protocol_validation",
+          req,
+          `Domain override attempt: ${baseUrl.hostname} -> ${url.hostname}`,
+          { requestId, source, base },
+        )
+      }
+      throw error
     }
   } else {
     url = new URL(source)
@@ -58,9 +83,18 @@ export function buildURL(source: string, base?: string): URL {
 
   // Validate protocol to prevent SSRF attacks
   if (!ALLOWED_PROTOCOLS.has(url.protocol)) {
-    throw new Error(
+    const error = new Error(
       `Unsupported protocol: ${url.protocol}. Only HTTP and HTTPS are allowed.`,
     )
+    if (logger && req) {
+      logger.logSecurityEvent(
+        "protocol_validation",
+        req,
+        `Unsupported protocol: ${url.protocol}`,
+        { requestId, source, base },
+      )
+    }
+    throw error
   }
 
   return url
@@ -96,53 +130,125 @@ export function headersToRecord(headers: Headers): Record<string, string> {
 /**
  * Validates header name for security issues
  */
-function validateHeaderName(name: string): void {
+function validateHeaderName(
+  name: string,
+  logger?: ProxyLogger,
+  requestId?: string,
+  req?: Request,
+): void {
   if (!name || typeof name !== "string") {
-    throw new Error("Header name must be a non-empty string")
+    const error = new Error("Header name must be a non-empty string")
+    if (logger && req) {
+      logger.logSecurityEvent(
+        "header_validation",
+        req,
+        "Invalid header name: empty or non-string",
+        { requestId, headerName: name },
+      )
+    }
+    throw error
   }
 
   // Check for CRLF injection
   if (name.includes("\r") || name.includes("\n") || name.includes("\0")) {
-    throw new Error(
+    const error = new Error(
       `Invalid header name: contains forbidden characters (CRLF or null bytes)`,
     )
+    if (logger && req) {
+      logger.logSecurityEvent(
+        "header_validation",
+        req,
+        "Header name contains forbidden characters",
+        { requestId, headerName: name },
+      )
+    }
+    throw error
   }
 
   // Check for spaces and other invalid characters according to RFC 7230
   if (/[\s"(),/:;<=>?@[\\\]{}]/.test(name)) {
-    throw new Error(`Invalid header name: contains forbidden characters`)
+    const error = new Error(
+      `Invalid header name: contains forbidden characters`,
+    )
+    if (logger && req) {
+      logger.logSecurityEvent(
+        "header_validation",
+        req,
+        "Header name contains invalid characters",
+        { requestId, headerName: name },
+      )
+    }
+    throw error
   }
 
   if (name === "") {
-    throw new Error("Header name cannot be empty")
+    const error = new Error("Header name cannot be empty")
+    if (logger && req) {
+      logger.logSecurityEvent(
+        "header_validation",
+        req,
+        "Header name is empty",
+        { requestId },
+      )
+    }
+    throw error
   }
 }
 
 /**
  * Validates header value for security issues
  */
-function validateHeaderValue(value: string, headerName: string): void {
+function validateHeaderValue(
+  value: string,
+  headerName: string,
+  logger?: ProxyLogger,
+  requestId?: string,
+  req?: Request,
+): void {
   if (typeof value !== "string") {
-    throw new Error(`Header '${headerName}' value must be a string`)
+    const error = new Error(`Header '${headerName}' value must be a string`)
+    if (logger && req) {
+      logger.logSecurityEvent(
+        "header_validation",
+        req,
+        `Header value must be string: ${headerName}`,
+        { requestId, headerName, valueType: typeof value },
+      )
+    }
+    throw error
   }
 
   // Check for CRLF injection (main security concern)
   if (value.includes("\r") || value.includes("\n") || value.includes("\0")) {
-    throw new Error(
+    const error = new Error(
       `Header '${headerName}' contains forbidden characters (CRLF or null bytes)`,
     )
+    if (logger && req) {
+      logger.logSecurityEvent(
+        "header_validation",
+        req,
+        `Header value contains forbidden characters: ${headerName}`,
+        { requestId, headerName },
+      )
+    }
+    throw error
   }
 }
 
 /**
  * Converts plain object to Headers object with security validation
  */
-export function recordToHeaders(record: Record<string, string>): Headers {
+export function recordToHeaders(
+  record: Record<string, string>,
+  logger?: ProxyLogger,
+  requestId?: string,
+  req?: Request,
+): Headers {
   const headers = new Headers()
   for (const [key, value] of Object.entries(record)) {
     // Apply explicit validation before using native Headers API
-    validateHeaderName(key)
-    validateHeaderValue(value, key)
+    validateHeaderName(key, logger, requestId, req)
+    validateHeaderValue(value, key, logger, requestId, req)
 
     // The native Headers.set() will also validate, providing defense in depth
     headers.set(key, value)
@@ -153,39 +259,82 @@ export function recordToHeaders(record: Record<string, string>): Headers {
 /**
  * Validates query parameter name for security issues
  */
-function validateQueryParamName(name: string): void {
+function validateQueryParamName(
+  name: string,
+  logger?: ProxyLogger,
+  requestId?: string,
+  req?: Request,
+): void {
   if (!name || typeof name !== "string") {
-    throw new Error("Query parameter name must be a non-empty string")
+    const error = new Error("Query parameter name must be a non-empty string")
+    if (logger && req) {
+      logger.logSecurityEvent(
+        "query_validation",
+        req,
+        "Invalid query parameter name: empty or non-string",
+        { requestId, paramName: name },
+      )
+    }
+    throw error
   }
 
   // Check for dangerous characters that could indicate injection attempts
   if (name.includes("\r") || name.includes("\n") || name.includes("\0")) {
-    throw new Error(
+    const error = new Error(
       `Query parameter name '${name}' contains forbidden characters (CRLF or null bytes)`,
     )
+    if (logger && req) {
+      logger.logSecurityEvent(
+        "query_validation",
+        req,
+        "Query parameter name contains forbidden characters",
+        { requestId, paramName: name },
+      )
+    }
+    throw error
   }
 }
 
 /**
  * Validates query parameter value for security issues
  */
-function validateQueryParamValue(value: string, paramName: string): void {
+function validateQueryParamValue(
+  value: string,
+  paramName: string,
+  logger?: ProxyLogger,
+  requestId?: string,
+  req?: Request,
+): void {
   if (typeof value !== "string") {
     return // Non-string values will be converted to strings safely
   }
 
   // Check for dangerous characters that could indicate injection attempts
   if (value.includes("\r") || value.includes("\n") || value.includes("\0")) {
-    throw new Error(
+    const error = new Error(
       `Query parameter '${paramName}' value contains forbidden characters (CRLF or null bytes)`,
     )
+    if (logger && req) {
+      logger.logSecurityEvent(
+        "query_validation",
+        req,
+        "Query parameter value contains forbidden characters",
+        { requestId, paramName },
+      )
+    }
+    throw error
   }
 }
 
 /**
  * Builds query string from parameters with security validation
  */
-export function buildQueryString(params: Record<string, any> | string): string {
+export function buildQueryString(
+  params: Record<string, any> | string,
+  logger?: ProxyLogger,
+  requestId?: string,
+  req?: Request,
+): string {
   if (typeof params === "string") {
     // For string parameters, validate for dangerous characters
     if (
@@ -193,9 +342,18 @@ export function buildQueryString(params: Record<string, any> | string): string {
       params.includes("\n") ||
       params.includes("\0")
     ) {
-      throw new Error(
+      const error = new Error(
         "Query string contains forbidden characters (CRLF or null bytes)",
       )
+      if (logger && req) {
+        logger.logSecurityEvent(
+          "query_validation",
+          req,
+          "Query string contains forbidden characters",
+          { requestId },
+        )
+      }
+      throw error
     }
     return params.startsWith("?") ? params : `?${params}`
   }
@@ -203,17 +361,17 @@ export function buildQueryString(params: Record<string, any> | string): string {
   const searchParams = new URLSearchParams()
   for (const [key, value] of Object.entries(params)) {
     // Validate parameter name
-    validateQueryParamName(key)
+    validateQueryParamName(key, logger, requestId, req)
 
     if (Array.isArray(value)) {
       value.forEach((v) => {
         const stringValue = String(v)
-        validateQueryParamValue(stringValue, key)
+        validateQueryParamValue(stringValue, key, logger, requestId, req)
         searchParams.append(key, stringValue)
       })
     } else {
       const stringValue = String(value)
-      validateQueryParamValue(stringValue, key)
+      validateQueryParamValue(stringValue, key, logger, requestId, req)
       searchParams.set(key, stringValue)
     }
   }
@@ -225,9 +383,23 @@ export function buildQueryString(params: Record<string, any> | string): string {
 /**
  * Validates HTTP method for security issues
  */
-export function validateHttpMethod(method: string): void {
+export function validateHttpMethod(
+  method: string,
+  logger?: ProxyLogger,
+  requestId?: string,
+  req?: Request,
+): void {
   if (!method || typeof method !== "string") {
-    throw new Error("HTTP method must be a non-empty string")
+    const error = new Error("HTTP method must be a non-empty string")
+    if (logger && req) {
+      logger.logSecurityEvent(
+        "method_validation",
+        req,
+        "Invalid HTTP method: empty or non-string",
+        { requestId, method },
+      )
+    }
+    throw error
   }
 
   // Normalize method to uppercase for comparison
@@ -239,23 +411,50 @@ export function validateHttpMethod(method: string): void {
     normalizedMethod.includes("\n") ||
     normalizedMethod.includes("\0")
   ) {
-    throw new Error(
+    const error = new Error(
       `HTTP method '${method}' contains forbidden characters (CRLF or null bytes)`,
     )
+    if (logger && req) {
+      logger.logSecurityEvent(
+        "method_validation",
+        req,
+        "HTTP method contains forbidden characters",
+        { requestId, method },
+      )
+    }
+    throw error
   }
 
   // Check for spaces or other invalid characters
   if (/\s/.test(normalizedMethod)) {
-    throw new Error(
+    const error = new Error(
       `HTTP method '${method}' contains invalid characters (spaces)`,
     )
+    if (logger && req) {
+      logger.logSecurityEvent(
+        "method_validation",
+        req,
+        "HTTP method contains spaces",
+        { requestId, method },
+      )
+    }
+    throw error
   }
 
   // Validate against allowed methods
   if (!ALLOWED_HTTP_METHODS.has(normalizedMethod)) {
-    throw new Error(
+    const error = new Error(
       `HTTP method ${method} is not allowed. Only ${Array.from(ALLOWED_HTTP_METHODS).join(", ")} methods are permitted.`,
     )
+    if (logger && req) {
+      logger.logSecurityEvent(
+        "method_validation",
+        req,
+        `Disallowed HTTP method: ${method}`,
+        { requestId, method, allowedMethods: Array.from(ALLOWED_HTTP_METHODS) },
+      )
+    }
+    throw error
   }
 }
 

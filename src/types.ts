@@ -1,6 +1,8 @@
 /**
- * Type definitions for fetch-proxy library
+ * Type definitions for fetch-gate library
  */
+
+import type { Logger } from "pino"
 
 export interface ProxyOptions {
   /** Base URL for all proxied requests */
@@ -17,6 +19,8 @@ export interface ProxyOptions {
   followRedirects?: boolean
   /** Maximum number of redirects to follow (default: 5) */
   maxRedirects?: number
+  /** Logger instance for request/response logging */
+  logger?: Logger
 }
 
 export interface CircuitBreakerOptions {
@@ -41,6 +45,8 @@ export interface ProxyRequestOptions {
   queryString?: Record<string, any> | string
   /** Custom request options */
   request?: RequestInit
+  /** Logger instance to override the global logger for this request */
+  logger?: Logger
 
   // Lifecycle hooks
   /** Hook called before the request is sent to the target server */

@@ -4,10 +4,10 @@
  * Example: Load Balancer
  *
  * This example shows how to implement simple round-robin load balancing
- * across multiple backend services using fetch-proxy.
+ * across multiple backend services using fetch-gate.
  */
 
-import createFetchProxy from "../src/index"
+import createFetchGate from "../src/index"
 
 // Backend services to load balance across
 const backends = [
@@ -19,7 +19,7 @@ const backends = [
 let currentBackend = 0
 
 // Create proxy instance with circuit breaker
-const { proxy, getCircuitBreakerState } = createFetchProxy({
+const { proxy, getCircuitBreakerState } = createFetchGate({
   timeout: 5000,
   circuitBreaker: {
     failureThreshold: 2,

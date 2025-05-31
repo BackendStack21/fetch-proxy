@@ -1,5 +1,5 @@
 /**
- * fetch-proxy - A fetch-based HTTP proxy library optimized for Bun runtime
+ * fetch-gate - A fetch-based HTTP proxy library optimized for Bun runtime
  *
  * Development entry point - re-exports from src for examples and testing
  * Production builds should use the transpiled lib/ version
