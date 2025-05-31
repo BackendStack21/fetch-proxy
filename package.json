@@ -12,7 +12,7 @@
     "LICENSE"
   ],
   "keywords": ["gateway", "proxy", "fetch", "http", "circuit-breaker", "timeout", "hooks", "bun", "typescript"],
-  "author": "",
+  "author": "Rolando Santamaria Maso <kyberneees@gmail.com>",
   "license": "MIT",
   "scripts": {
     "format": "prettier --write src/**/*.ts",
