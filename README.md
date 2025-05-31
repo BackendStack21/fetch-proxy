@@ -1,6 +1,6 @@
 # fetch-proxy
 
-A modern, fetch-based HTTP proxy library optimized for Bun runtime with advanced features like hooks, circuit breakers, and timeouts.
+A modern, fetch-based HTTP proxy library optimized for Bun runtime with advanced features like hooks, circuit breakers, and comprehensive security protections.
 
 ## Features
 
@@ -12,6 +12,8 @@ A modern, fetch-based HTTP proxy library optimized for Bun runtime with advanced
 - 🔧 **Header Rewriting**: Transform request and response headers
 - 📦 **TypeScript**: Full TypeScript support with comprehensive types
 - 🔀 **Redirect Control**: Manual redirect handling support
+- 🛡️ **Security Hardened**: Protection against SSRF, injection attacks, path traversal, and more
+- ✅ **Comprehensive Testing**: 95.6% test coverage with 128 security and functionality tests
 
 ## Installation
 
@@ -500,12 +502,32 @@ The library includes comprehensive tests covering all major functionality:
 - Error handling
 - Header transformations
 - Timeout scenarios
+- Security protections and attack prevention
 
 Run the test suite with:
 
 ```bash
 bun test
 ```
+
+Run tests with coverage:
+
+```bash
+bun test --coverage
+```
+
+## Security
+
+This library includes comprehensive security protections against common web vulnerabilities:
+
+- **SSRF Protection**: Protocol validation and domain restrictions
+- **Header Injection Prevention**: CRLF injection and response splitting protection
+- **Query String Injection Protection**: Parameter validation and encoding safety
+- **Path Traversal Prevention**: Secure path normalization utilities
+- **HTTP Method Validation**: Whitelist-based method validation
+- **DoS Prevention Guidelines**: Resource exhaustion protection recommendations
+
+For detailed security information, see [SECURITY.md](./SECURITY.md).
 
 ## Contributing
 

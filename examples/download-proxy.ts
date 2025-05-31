@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
 import createFetchProxy from "../src/index"
+import { normalizeSecurePath } from "../src/utils"
 
 // Backend file server
 const backendServer = Bun.serve({
@@ -64,8 +65,18 @@ const gatewayServer = Bun.serve({
 
     // Proxy file requests from /api/files/* to backend /files/*
     if (url.pathname.startsWith("/api/files/")) {
-      const backendPath = url.pathname.replace("/api/files/", "/files/")
-      return proxy(req, backendPath)
+      try {
+        // Securely normalize the path to prevent directory traversal
+        const requestedPath = url.pathname.replace("/api/files", "/files")
+        const backendPath = normalizeSecurePath(requestedPath, "/files/")
+        return proxy(req, backendPath)
+      } catch (error) {
+        // Return 400 Bad Request for path traversal attempts
+        return new Response(
+          `Bad Request: ${error instanceof Error ? error.message : "Invalid path"}`,
+          { status: 400 },
+        )
+      }
     }
 
     return new Response("Not Found", { status: 404 })

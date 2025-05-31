@@ -10,6 +10,7 @@ import {
   headersToRecord,
   recordToHeaders,
   buildQueryString,
+  validateHttpMethod,
 } from "./utils"
 import type {
   ProxyOptions,
@@ -112,6 +113,15 @@ export class FetchProxy {
         err.name === "TimeoutError"
       ) {
         return new Response("Gateway Timeout", { status: 504 })
+      } else if (
+        err.message.includes("HTTP method") ||
+        err.message.includes("Unsupported protocol") ||
+        err.message.includes("Protocol override not allowed") ||
+        err.message.includes("Domain override not allowed") ||
+        err.message.includes("Invalid header") ||
+        err.message.includes("forbidden characters")
+      ) {
+        return new Response(`Bad Request: ${err.message}`, { status: 400 })
       } else {
         return new Response("Bad Gateway", { status: 502 })
       }
@@ -123,6 +133,9 @@ export class FetchProxy {
     source?: string,
     options: ProxyRequestOptions = {},
   ): Promise<Response> {
+    // Validate HTTP method for security
+    validateHttpMethod(req.method)
+
     // Build target URL
     const targetUrl = this.buildTargetURL(source || req.url, options.base)
 
@@ -241,18 +254,24 @@ export class FetchProxy {
     if (!queryString) return url
 
     const newUrl = new URL(url.toString())
+
+    // Build the new query string with validation
     const queryStr = buildQueryString(queryString)
 
     if (queryStr) {
-      // Merge with existing query string
-      const existingParams = new URLSearchParams(newUrl.search)
-      const newParams = new URLSearchParams(queryStr.slice(1)) // Remove leading '?'
+      // For security, we'll merge by reconstructing the entire query string
+      // rather than using URLSearchParams which can decode dangerous characters
 
-      newParams.forEach((value, key) => {
-        existingParams.set(key, value)
-      })
+      const existingSearch = newUrl.search
+      const newSearch = queryStr.slice(1) // Remove leading '?'
 
-      newUrl.search = existingParams.toString()
+      if (existingSearch) {
+        // Merge existing and new parameters
+        // Use direct string concatenation to preserve encoding
+        newUrl.search = existingSearch + "&" + newSearch
+      } else {
+        newUrl.search = newSearch
+      }
     }
 
     return newUrl
