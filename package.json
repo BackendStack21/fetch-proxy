@@ -25,7 +25,8 @@
     "build:bun": "bun build src/index.ts --outdir lib --target bun",
     "clean": "rm -rf lib/",
     "prepublishOnly": "bun run clean && bun run build",
-    "example:benchmark": "bun run examples/local-gateway-server.ts"
+    "example:benchmark": "bun run examples/local-gateway-server.ts",
+    "deploy": "bun run prepublishOnly && bun publish"
   },
   "devDependencies": {
     "@types/bun": "latest",
