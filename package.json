@@ -1,6 +1,6 @@
 {
   "name": "fetch-gate",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A fetch-based HTTP proxy library optimized for Bun runtime with hooks, circuit breakers and timeouts",
   "main": "lib/index.js",
   "module": "lib/index.js",
