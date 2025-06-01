@@ -136,7 +136,7 @@ function validateHeaderName(
   requestId?: string,
   req?: Request,
 ): void {
-  if (!name || typeof name !== "string") {
+  if (typeof name !== "string") {
     const error = new Error("Header name must be a non-empty string")
     if (logger && req) {
       logger.logSecurityEvent(
