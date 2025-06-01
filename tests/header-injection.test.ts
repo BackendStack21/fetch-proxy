@@ -117,7 +117,7 @@ describe("Header Injection Security Tests", () => {
 
       expect(() => {
         recordToHeaders(maliciousHeaders)
-      }).toThrow(/must be a non-empty string/)
+      }).toThrow(/cannot be empty/)
     })
 
     it("should reject header names with spaces", () => {
