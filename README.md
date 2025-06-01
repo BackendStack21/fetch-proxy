@@ -334,18 +334,15 @@ const { proxy } = createFetchGate({
 Bun.serve({
   async fetch(req) {
     return proxy(req, undefined, {
-      // 🆕 Enhanced naming - more descriptive than onRequest
       beforeRequest: async (req, opts) => {
         console.log(`🔄 Starting request: ${req.method} ${req.url}`)
         console.log(`Request timeout: ${opts.timeout}ms`)
       },
 
-      // 🆕 Enhanced naming - more descriptive than onResponse
       afterResponse: async (req, res, body) => {
         console.log(`✅ Request completed: ${res.status} ${res.statusText}`)
       },
 
-      // 🆕 New circuit breaker lifecycle hooks
       beforeCircuitBreakerExecution: async (req, opts) => {
         console.log(`⚡ Circuit breaker executing request`)
       },
