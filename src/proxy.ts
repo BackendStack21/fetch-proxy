@@ -14,7 +14,6 @@ import {
 } from "./utils"
 import {
   createDefaultLogger,
-  createSilentLogger,
   createProxyLogger,
   type ProxyLogger,
 } from "./logger"
