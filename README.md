@@ -1,6 +1,6 @@
 # fetch-gate
 
-A modern, fetch-based HTTP proxy library optimized for Bun runtime with advanced features like hooks, circuit breakers, and comprehensive security protections.
+A modern, [fetch-based](https://bun.sh/docs/api/fetch) HTTP proxy library optimized for [Bun runtime](https://bun.sh/docs/) with advanced features like hooks, circuit breakers, and comprehensive security protections.
 
 ## Features
 
@@ -517,6 +517,12 @@ Bun.serve({
 })
 ```
 
+## Connection Pooling
+
+Bun's fetch API automatically handles connection pooling, so you don't need to manage connections manually. Each request will reuse existing connections when possible, improving performance and reducing latency.
+
+> Read more about [Bun's fetch connection pooling](https://bun.sh/docs/api/fetch#connection-pooling-http-keep-alive).
+
 ## Error Handling
 
 The library automatically handles common error scenarios:
@@ -627,4 +633,3 @@ This library includes comprehensive security protections against common web vuln
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
