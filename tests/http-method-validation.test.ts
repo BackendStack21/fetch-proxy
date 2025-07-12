@@ -19,6 +19,38 @@ describe("HTTP Method Validation", () => {
     })
     serverPort = server.port
     baseUrl = `http://localhost:${serverPort}`
+
+    // Wait for server to be ready with more robust checks
+    let retries = 0
+    const maxRetries = 20 // Increased retries for CI
+    let serverReady = false
+
+    while (retries < maxRetries && !serverReady) {
+      try {
+        const response = await fetch(`${baseUrl}/test`, {
+          method: "GET",
+          headers: { "User-Agent": "test" },
+        })
+
+        if (response.ok) {
+          const text = await response.text()
+          if (text.includes("Method: GET")) {
+            serverReady = true
+            break
+          }
+        }
+      } catch (error) {
+        // Server not ready yet
+      }
+      retries++
+      await new Promise((resolve) => setTimeout(resolve, 150)) // Increased delay
+    }
+
+    if (!serverReady) {
+      throw new Error(
+        `Test server failed to start within timeout. Tried ${maxRetries} times.`,
+      )
+    }
   })
 
   afterAll(async () => {

@@ -52,24 +52,36 @@ describe("fetch-gate", () => {
 
     baseUrl = `http://localhost:${server.port}`
 
-    // Wait for server to be ready by making a test request
+    // Wait for server to be ready with more robust checks
     let retries = 0
-    const maxRetries = 10
-    while (retries < maxRetries) {
+    const maxRetries = 20 // Increased retries for CI
+    let serverReady = false
+
+    while (retries < maxRetries && !serverReady) {
       try {
-        const response = await fetch(`${baseUrl}/echo`)
+        const response = await fetch(`${baseUrl}/echo`, {
+          method: "GET",
+          headers: { "User-Agent": "test" },
+        })
+
         if (response.ok) {
-          break
+          const data = (await response.json()) as any
+          if (data.method === "GET" && data.url && data.headers) {
+            serverReady = true
+            break
+          }
         }
       } catch (error) {
         // Server not ready yet
       }
       retries++
-      await new Promise((resolve) => setTimeout(resolve, 100))
+      await new Promise((resolve) => setTimeout(resolve, 150)) // Increased delay
     }
 
-    if (retries >= maxRetries) {
-      throw new Error("Test server failed to start within timeout")
+    if (!serverReady) {
+      throw new Error(
+        `Test server failed to start within timeout. Tried ${maxRetries} times.`,
+      )
     }
   })
 

@@ -1,9 +1,48 @@
-import { describe, it, expect, mock, afterAll } from "bun:test"
+import { describe, it, expect, mock, afterAll, beforeAll } from "bun:test"
 import { buildQueryString } from "../src/utils"
 import { FetchProxy } from "../src/proxy"
 
-afterAll(() => {
+let testServer: any
+let testPort: number
+
+beforeAll(async () => {
+  // Create a local test server that mimics httpbin.org/get
+  testPort = 3000 + Math.floor(Math.random() * 1000)
+  testServer = Bun.serve({
+    port: testPort,
+    fetch(req) {
+      const url = new URL(req.url)
+      return new Response(
+        JSON.stringify({
+          url: req.url,
+          headers: Object.fromEntries(req.headers.entries()),
+          args: Object.fromEntries(url.searchParams.entries()),
+          method: req.method,
+        }),
+        {
+          headers: { "Content-Type": "application/json" },
+        },
+      )
+    },
+  })
+
+  // Wait for server to be ready
+  for (let i = 0; i < 20; i++) {
+    try {
+      const response = await fetch(`http://localhost:${testPort}/test`)
+      if (response.ok) break
+    } catch (e) {
+      if (i === 19) throw new Error("Test server failed to start")
+      await new Promise((resolve) => setTimeout(resolve, 150))
+    }
+  }
+})
+
+afterAll(async () => {
   mock.restore()
+  if (testServer) {
+    testServer.stop()
+  }
 })
 
 describe("Query String Injection Security Tests", () => {
@@ -180,7 +219,7 @@ describe("Query String Injection Security Tests", () => {
   describe("Proxy Integration with Query Injection", () => {
     it("should safely handle query string injection through proxy", async () => {
       const proxy = new FetchProxy({
-        base: "http://httpbin.org",
+        base: `http://localhost:${testPort}`,
         circuitBreaker: { enabled: false },
       })
 
@@ -191,14 +230,14 @@ describe("Query String Injection Security Tests", () => {
         special: "value with spaces and symbols!@#$%^&*()",
       }
 
-      const request = new Request("http://httpbin.org/get")
+      const request = new Request(`http://localhost:${testPort}/get`)
 
       try {
         const response = await proxy.proxy(request, "/get", {
           queryString: safeParams,
         })
 
-        // Should get a successful response (httpbin.org should handle encoded params safely)
+        // Should get a successful response (local server should handle encoded params safely)
         expect(response.status).toBe(200)
 
         const data = (await response.json()) as any
@@ -220,7 +259,7 @@ describe("Query String Injection Security Tests", () => {
 
     it("should reject dangerous CRLF injection attempts in proxy", async () => {
       const proxy = new FetchProxy({
-        base: "http://httpbin.org",
+        base: `http://localhost:${testPort}`,
         circuitBreaker: { enabled: false },
       })
 
@@ -230,7 +269,7 @@ describe("Query String Injection Security Tests", () => {
         crlf: "value\r\nX-Injected-Header: evil",
       }
 
-      const request = new Request("http://httpbin.org/get")
+      const request = new Request(`http://localhost:${testPort}/get`)
 
       // This should return a 400 Bad Request due to our security validation
       const response = await proxy.proxy(request, "/get", {
@@ -246,11 +285,11 @@ describe("Query String Injection Security Tests", () => {
 
     it("should safely merge query strings with existing URL parameters", async () => {
       const proxy = new FetchProxy({
-        base: "http://httpbin.org",
+        base: `http://localhost:${testPort}`,
         circuitBreaker: { enabled: false },
       })
 
-      const request = new Request("http://httpbin.org/get")
+      const request = new Request(`http://localhost:${testPort}/get`)
 
       try {
         // Test merging with URL that already has query parameters
