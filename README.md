@@ -179,7 +179,10 @@ interface ProxyRequestOptions {
     res: Response,
     body?: ReadableStream | null,
   ) => void | Promise<void>
-  onError?: (req: Request, error: Error) => void | Promise<void>
+  onError?: (
+    req: Request,
+    error: Error,
+  ) => void | Promise<void> | Promise<Response>
   beforeCircuitBreakerExecution?: (
     req: Request,
     opts: ProxyRequestOptions,
@@ -543,6 +546,23 @@ proxy(req, undefined, {
     metrics.increment("proxy.errors", {
       error_type: error.message.includes("timeout") ? "timeout" : "other",
     })
+  },
+})
+```
+
+#### Returning Fallback Responses
+
+You can return a fallback response from the `onError` hook by resolving the hook with a `Response` object. This allows you to customize the error response sent to the client.
+
+```typescript
+proxy(req, undefined, {
+  onError: async (req, error) => {
+    // Log error
+    console.error("Proxy error:", error)
+
+    // Return a fallback response
+    console.log("Returning fallback response for:", req.url)
+    return new Response("Fallback response", { status: 200 })
   },
 })
 ```

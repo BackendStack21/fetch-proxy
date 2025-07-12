@@ -166,8 +166,9 @@ export class FetchProxy {
       currentLogger.logRequestError(req, err, { requestId, executionTime })
 
       // Execute error hooks
+      let fallbackResponse: Response | void = undefined
       if (options.onError) {
-        await options.onError(req, err)
+        fallbackResponse = await options.onError(req, err)
       }
 
       // Execute circuit breaker completion hooks for failures
@@ -179,12 +180,17 @@ export class FetchProxy {
           state: this.circuitBreaker.getState(),
           failureCount: this.circuitBreaker.getFailures(),
           executionTimeMs: executionTime,
+          fallbackResponse,
         },
         options,
       )
 
+      if (fallbackResponse) {
+        // If onError provided a fallback response, return it
+        return fallbackResponse
+      }
       // Return appropriate error response
-      if (err.message.includes("Circuit breaker is OPEN")) {
+      else if (err.message.includes("Circuit breaker is OPEN")) {
         return new Response("Service Unavailable", { status: 503 })
       } else if (
         err.message.includes("timeout") ||
