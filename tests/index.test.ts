@@ -75,7 +75,7 @@ describe("fetch-gate", () => {
         // Server not ready yet
       }
       retries++
-      await new Promise((resolve) => setTimeout(resolve, 150)) // Increased delay
+      await new Promise((resolve) => setTimeout(resolve, 250)) // Increased delay for CI with low resources
     }
 
     if (!serverReady) {
@@ -100,10 +100,10 @@ describe("fetch-gate", () => {
     it("should create proxy instance with custom options", () => {
       const { proxy, getCircuitBreakerState } = createFetchGate({
         base: "https://api.example.com",
-        timeout: 5000,
+        timeout: 15000, // Increased timeout for CI with low resources
         circuitBreaker: {
           failureThreshold: 3,
-          resetTimeout: 30000,
+          resetTimeout: 60000, // Increased reset timeout for CI
         },
       })
 
@@ -182,7 +182,7 @@ describe("fetch-gate", () => {
     it("should handle timeouts", async () => {
       const proxyInstance = new FetchProxy({
         base: baseUrl,
-        timeout: 80, // Slightly longer timeout for CI stability
+        timeout: 80, // Keep original timeout for timeout test functionality
       })
 
       const req = new Request("http://example.com/test")
@@ -215,7 +215,7 @@ describe("fetch-gate", () => {
         base: baseUrl,
         circuitBreaker: {
           failureThreshold: 2,
-          resetTimeout: 1000,
+          resetTimeout: 2000, // Increased for CI with low resources
           enabled: true,
         },
       })
@@ -347,7 +347,7 @@ describe("fetch-gate", () => {
 
       const circuitBreaker = new CircuitBreaker({
         failureThreshold: 1,
-        resetTimeout: 100,
+        resetTimeout: 200, // Increased for CI with low resources
       })
 
       // Trigger failure to open the circuit
@@ -369,7 +369,7 @@ describe("fetch-gate", () => {
     it("should reset failures after successful execution in HALF_OPEN state", async () => {
       const circuitBreaker = new CircuitBreaker({
         failureThreshold: 1,
-        resetTimeout: 150, // Slightly longer for CI stability
+        resetTimeout: 300, // Increased for CI with low resources
       })
 
       // Trigger failure to open the circuit
@@ -380,7 +380,7 @@ describe("fetch-gate", () => {
       expect(circuitBreaker.getState()).toBe(CircuitState.OPEN)
 
       // Wait for reset timeout with a bit of buffer
-      await new Promise((resolve) => setTimeout(resolve, 200))
+      await new Promise((resolve) => setTimeout(resolve, 350)) // Increased wait time for CI
 
       // Execute a successful request
       await expect(

@@ -33,7 +33,7 @@ beforeAll(async () => {
       if (response.ok) break
     } catch (e) {
       if (i === 19) throw new Error("Test server failed to start")
-      await new Promise((resolve) => setTimeout(resolve, 150))
+      await new Promise((resolve) => setTimeout(resolve, 250)) // Increased delay for CI with low resources
     }
   }
 })

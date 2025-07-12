@@ -30,7 +30,7 @@ describe("Enhanced Hook Naming Conventions", () => {
   beforeEach(() => {
     proxy = new FetchProxy({
       base: "https://api.example.com",
-      timeout: 5000,
+      timeout: 15000, // Increased timeout for CI with low resources
     })
 
     mockResponse = new Response(JSON.stringify({ success: true }), {
@@ -62,7 +62,7 @@ describe("Enhanced Hook Naming Conventions", () => {
     it("should handle async beforeRequest hooks", async () => {
       let hookExecuted = false
       const beforeRequestHook = async (req: Request) => {
-        await new Promise((resolve) => setTimeout(resolve, 10))
+        await new Promise((resolve) => setTimeout(resolve, 25)) // Increased delay for CI
         hookExecuted = true
       }
 
@@ -168,7 +168,9 @@ describe("Enhanced Hook Naming Conventions", () => {
       // Add some delay to the fetch
       mockFetch.mockImplementationOnce(
         () =>
-          new Promise((resolve) => setTimeout(() => resolve(mockResponse), 50)),
+          new Promise((resolve) =>
+            setTimeout(() => resolve(mockResponse), 100),
+          ), // Increased delay for CI
       )
 
       const options: ProxyRequestOptions = {

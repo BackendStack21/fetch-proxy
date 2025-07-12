@@ -123,7 +123,7 @@ describe("DoS and Resource Exhaustion Security Tests", () => {
     test("should demonstrate timeout importance for DoS prevention", () => {
       // Long timeouts can be exploited for resource exhaustion
       const longTimeout = 300000 // 5 minutes - too long
-      const reasonableTimeout = 30000 // 30 seconds - reasonable
+      const reasonableTimeout = 60000 // 60 seconds - reasonable for CI with low resources
 
       expect(longTimeout).toBeGreaterThan(reasonableTimeout)
 

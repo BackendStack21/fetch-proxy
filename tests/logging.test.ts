@@ -148,14 +148,14 @@ describe("Logging Integration", () => {
     })
 
     it("should log request start events", () => {
-      const context = { requestId: "test-123", timeout: 5000 }
+      const context = { requestId: "test-123", timeout: 15000 } // Increased timeout for CI
 
       proxyLogger.logRequestStart(request, context)
 
       expect(mockLogger.info).toHaveBeenCalledWith(
         expect.objectContaining({
           requestId: "test-123",
-          timeout: 5000,
+          timeout: 15000, // Increased timeout for CI
           event: "request_start",
         }),
         expect.stringContaining("Starting GET request"),
@@ -272,14 +272,14 @@ describe("Logging Integration", () => {
     })
 
     it("should log timeout events", () => {
-      proxyLogger.logTimeout(request, 5000)
+      proxyLogger.logTimeout(request, 15000) // Increased timeout for CI
 
       expect(mockLogger.warn).toHaveBeenCalledWith(
         expect.objectContaining({
-          timeout: 5000,
+          timeout: 15000, // Increased timeout for CI
           event: "request_timeout",
         }),
-        expect.stringContaining("Request timed out after 5000ms"),
+        expect.stringContaining("Request timed out after 15000ms"),
       )
     })
 

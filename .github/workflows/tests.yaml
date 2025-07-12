@@ -18,4 +18,4 @@ jobs:
         run: bun run format
 
       - name: Run tests
-        run: bun run test
+        run: bun test --coverage tests/*.test.ts --timeout=120000

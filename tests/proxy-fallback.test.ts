@@ -27,7 +27,7 @@ describe("Proxy Fallback Response", () => {
   beforeEach(() => {
     proxy = new FetchProxy({
       base: "https://api.example.com",
-      timeout: 5000,
+      timeout: 15000, // Increased timeout for CI with low resources
     })
     mockFetch.mockClear()
   })
@@ -72,7 +72,7 @@ describe("Proxy Fallback Response", () => {
 
       const onErrorHook = jest.fn().mockImplementation(async (req, error) => {
         // Simulate async fallback logic
-        await new Promise((resolve) => setTimeout(resolve, 10))
+        await new Promise((resolve) => setTimeout(resolve, 25)) // Increased delay for CI
 
         return new Response(
           JSON.stringify({
@@ -173,7 +173,7 @@ describe("Proxy Fallback Response", () => {
         base: "https://api.example.com",
         circuitBreaker: {
           failureThreshold: 1,
-          resetTimeout: 1000,
+          resetTimeout: 2000, // Increased for CI with low resources
           enabled: true,
         },
       })

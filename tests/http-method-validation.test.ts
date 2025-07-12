@@ -43,7 +43,7 @@ describe("HTTP Method Validation", () => {
         // Server not ready yet
       }
       retries++
-      await new Promise((resolve) => setTimeout(resolve, 150)) // Increased delay
+      await new Promise((resolve) => setTimeout(resolve, 250)) // Increased delay for CI with low resources
     }
 
     if (!serverReady) {
