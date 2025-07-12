@@ -12,7 +12,6 @@ import {
   mock,
 } from "bun:test"
 import { FetchProxy } from "../src/proxy"
-import type { ProxyRequestOptions } from "../src/types"
 
 // Mock fetch for testing
 const mockFetch = jest.fn()
@@ -39,15 +38,15 @@ describe("Proxy Fallback Response", () => {
       mockFetch.mockRejectedValue(new Error("Network error"))
 
       const fallbackResponse = new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           message: "Service temporarily unavailable",
-          fallback: true
+          fallback: true,
         }),
         {
           status: 200,
           statusText: "OK",
           headers: new Headers({ "content-type": "application/json" }),
-        }
+        },
       )
 
       const onErrorHook = jest.fn().mockResolvedValue(fallbackResponse)
@@ -59,12 +58,12 @@ describe("Proxy Fallback Response", () => {
 
       expect(onErrorHook).toHaveBeenCalledWith(
         expect.any(Request),
-        expect.any(Error)
+        expect.any(Error),
       )
       expect(response).toBe(fallbackResponse)
       expect(response.status).toBe(200)
-      
-      const body = await response.json() as { fallback: boolean }
+
+      const body = (await response.json()) as { fallback: boolean }
       expect(body.fallback).toBe(true)
     })
 
@@ -73,10 +72,10 @@ describe("Proxy Fallback Response", () => {
 
       const onErrorHook = jest.fn().mockImplementation(async (req, error) => {
         // Simulate async fallback logic
-        await new Promise(resolve => setTimeout(resolve, 10))
-        
+        await new Promise((resolve) => setTimeout(resolve, 10))
+
         return new Response(
-          JSON.stringify({ 
+          JSON.stringify({
             error: "Service unavailable",
             timestamp: Date.now(),
             originalUrl: req.url,
@@ -85,7 +84,7 @@ describe("Proxy Fallback Response", () => {
             status: 503,
             statusText: "Service Unavailable",
             headers: new Headers({ "content-type": "application/json" }),
-          }
+          },
         )
       })
 
@@ -96,11 +95,14 @@ describe("Proxy Fallback Response", () => {
 
       expect(onErrorHook).toHaveBeenCalledWith(
         expect.any(Request),
-        expect.any(Error)
+        expect.any(Error),
       )
       expect(response.status).toBe(503)
-      
-      const body = await response.json() as { error: string; originalUrl: string }
+
+      const body = (await response.json()) as {
+        error: string
+        originalUrl: string
+      }
       expect(body.error).toBe("Service unavailable")
       expect(body.originalUrl).toBe("https://example.com/test")
     })
@@ -117,7 +119,7 @@ describe("Proxy Fallback Response", () => {
 
       expect(onErrorHook).toHaveBeenCalledWith(
         expect.any(Request),
-        expect.any(Error)
+        expect.any(Error),
       )
       expect(response.status).toBe(502) // Default error response
     })
@@ -128,33 +130,30 @@ describe("Proxy Fallback Response", () => {
           error: new Error("timeout"),
           expectedStatus: 504,
           fallbackStatus: 408,
-          fallbackMessage: "Request timeout - try again later"
+          fallbackMessage: "Request timeout - try again later",
         },
         {
           error: new Error("Circuit breaker is OPEN"),
           expectedStatus: 503,
           fallbackStatus: 503,
-          fallbackMessage: "Service temporarily unavailable"
+          fallbackMessage: "Service temporarily unavailable",
         },
         {
           error: new Error("Network error"),
           expectedStatus: 502,
           fallbackStatus: 500,
-          fallbackMessage: "Internal server error"
-        }
+          fallbackMessage: "Internal server error",
+        },
       ]
 
       for (const testCase of testCases) {
         mockFetch.mockRejectedValue(testCase.error)
 
         const onErrorHook = jest.fn().mockResolvedValue(
-          new Response(
-            JSON.stringify({ message: testCase.fallbackMessage }),
-            {
-              status: testCase.fallbackStatus,
-              headers: new Headers({ "content-type": "application/json" }),
-            }
-          )
+          new Response(JSON.stringify({ message: testCase.fallbackMessage }), {
+            status: testCase.fallbackStatus,
+            headers: new Headers({ "content-type": "application/json" }),
+          }),
         )
 
         const request = new Request("https://example.com/test")
@@ -163,8 +162,8 @@ describe("Proxy Fallback Response", () => {
         })
 
         expect(response.status).toBe(testCase.fallbackStatus)
-        
-        const body = await response.json() as { message: string }
+
+        const body = (await response.json()) as { message: string }
         expect(body.message).toBe(testCase.fallbackMessage)
       }
     })
@@ -182,52 +181,61 @@ describe("Proxy Fallback Response", () => {
       // First request fails to trigger circuit breaker
       mockFetch.mockRejectedValue(new Error("Service error"))
 
-      const onErrorHook = jest.fn()
+      const onErrorHook = jest
+        .fn()
         .mockResolvedValueOnce(
           new Response(
-            JSON.stringify({ 
+            JSON.stringify({
               message: "Using cached data",
               data: { cached: true },
-              source: "fallback"
+              source: "fallback",
             }),
             {
               status: 200,
               headers: new Headers({ "content-type": "application/json" }),
-            }
-          )
+            },
+          ),
         )
         .mockResolvedValueOnce(
           new Response(
-            JSON.stringify({ 
+            JSON.stringify({
               message: "Using cached data",
               data: { cached: true },
-              source: "fallback"
+              source: "fallback",
             }),
             {
               status: 200,
               headers: new Headers({ "content-type": "application/json" }),
-            }
-          )
+            },
+          ),
         )
 
       const request = new Request("https://example.com/test")
-      
+
       // First request - should fail and trigger circuit breaker
-      const response1 = await proxyWithCircuitBreaker.proxy(request, "/api/data", {
-        onError: onErrorHook,
-      })
+      const response1 = await proxyWithCircuitBreaker.proxy(
+        request,
+        "/api/data",
+        {
+          onError: onErrorHook,
+        },
+      )
 
       expect(response1.status).toBe(200)
-      const body1 = await response1.json() as { source: string }
+      const body1 = (await response1.json()) as { source: string }
       expect(body1.source).toBe("fallback")
 
       // Second request - circuit breaker should be open
-      const response2 = await proxyWithCircuitBreaker.proxy(request, "/api/data", {
-        onError: onErrorHook,
-      })
+      const response2 = await proxyWithCircuitBreaker.proxy(
+        request,
+        "/api/data",
+        {
+          onError: onErrorHook,
+        },
+      )
 
       expect(response2.status).toBe(200)
-      const body2 = await response2.json() as { source: string }
+      const body2 = (await response2.json()) as { source: string }
       expect(body2.source).toBe("fallback")
     })
 
@@ -235,9 +243,9 @@ describe("Proxy Fallback Response", () => {
       const networkError = new Error("ECONNREFUSED")
       mockFetch.mockRejectedValue(networkError)
 
-      const onErrorHook = jest.fn().mockResolvedValue(
-        new Response("Fallback response", { status: 200 })
-      )
+      const onErrorHook = jest
+        .fn()
+        .mockResolvedValue(new Response("Fallback response", { status: 200 }))
 
       const originalRequest = new Request("https://example.com/test", {
         method: "POST",
@@ -251,9 +259,9 @@ describe("Proxy Fallback Response", () => {
 
       expect(onErrorHook).toHaveBeenCalledWith(
         expect.any(Request),
-        networkError
+        networkError,
       )
-      
+
       // Check the actual URL passed to the hook (original request URL, not target URL)
       const actualRequest = onErrorHook.mock.calls[0][0]
       expect(actualRequest.url).toBe("https://example.com/test")
@@ -265,7 +273,7 @@ describe("Proxy Fallback Response", () => {
 
       const onErrorHook = jest.fn().mockImplementation(async (req, error) => {
         return new Response(
-          JSON.stringify({ 
+          JSON.stringify({
             message: "Fallback response",
             requestId: Math.random().toString(36).substr(2, 9),
             timestamp: Date.now(),
@@ -273,27 +281,31 @@ describe("Proxy Fallback Response", () => {
           {
             status: 200,
             headers: new Headers({ "content-type": "application/json" }),
-          }
+          },
         )
       })
 
-      const requests = Array.from({ length: 5 }, (_, i) => 
-        new Request(`https://example.com/test${i}`)
+      const requests = Array.from(
+        { length: 5 },
+        (_, i) => new Request(`https://example.com/test${i}`),
       )
 
       const responses = await Promise.all(
-        requests.map(req => 
+        requests.map((req) =>
           proxy.proxy(req, `/api/data${req.url.slice(-1)}`, {
             onError: onErrorHook,
-          })
-        )
+          }),
+        ),
       )
 
       expect(onErrorHook).toHaveBeenCalledTimes(5)
-      
+
       for (const response of responses) {
         expect(response.status).toBe(200)
-        const body = await response.json() as { message: string; requestId: string }
+        const body = (await response.json()) as {
+          message: string
+          requestId: string
+        }
         expect(body.message).toBe("Fallback response")
         expect(body.requestId).toBeDefined()
       }
@@ -307,7 +319,7 @@ describe("Proxy Fallback Response", () => {
       })
 
       const request = new Request("https://example.com/test")
-      
+
       try {
         await proxy.proxy(request, "/api/data", {
           onError: onErrorHook,
@@ -324,18 +336,15 @@ describe("Proxy Fallback Response", () => {
       mockFetch.mockRejectedValue(new Error("Service error"))
 
       const onErrorHook = jest.fn().mockResolvedValue(
-        new Response(
-          JSON.stringify({ fallback: true }),
-          {
-            status: 200,
-            headers: new Headers({
-              "content-type": "application/json",
-              "x-fallback": "true",
-              "x-timestamp": Date.now().toString(),
-              "cache-control": "no-cache",
-            }),
-          }
-        )
+        new Response(JSON.stringify({ fallback: true }), {
+          status: 200,
+          headers: new Headers({
+            "content-type": "application/json",
+            "x-fallback": "true",
+            "x-timestamp": Date.now().toString(),
+            "cache-control": "no-cache",
+          }),
+        }),
       )
 
       const request = new Request("https://example.com/test")
@@ -355,13 +364,13 @@ describe("Proxy Fallback Response", () => {
       const onErrorHook = jest.fn().mockImplementation(async (req, error) => {
         const stream = new ReadableStream({
           start(controller) {
-            const data = JSON.stringify({ 
+            const data = JSON.stringify({
               message: "Fallback stream",
-              chunks: ["chunk1", "chunk2", "chunk3"]
+              chunks: ["chunk1", "chunk2", "chunk3"],
             })
             controller.enqueue(new TextEncoder().encode(data))
             controller.close()
-          }
+          },
         })
 
         return new Response(stream, {
@@ -376,8 +385,11 @@ describe("Proxy Fallback Response", () => {
       })
 
       expect(response.status).toBe(200)
-      
-      const body = await response.json() as { message: string; chunks: string[] }
+
+      const body = (await response.json()) as {
+        message: string
+        chunks: string[]
+      }
       expect(body.message).toBe("Fallback stream")
       expect(body.chunks).toEqual(["chunk1", "chunk2", "chunk3"])
     })
@@ -389,9 +401,9 @@ describe("Proxy Fallback Response", () => {
 
       const beforeRequestHook = jest.fn()
       const afterResponseHook = jest.fn()
-      const onErrorHook = jest.fn().mockResolvedValue(
-        new Response("Fallback", { status: 200 })
-      )
+      const onErrorHook = jest
+        .fn()
+        .mockResolvedValue(new Response("Fallback", { status: 200 }))
 
       const request = new Request("https://example.com/test")
       const response = await proxy.proxy(request, "/api/data", {
@@ -410,9 +422,9 @@ describe("Proxy Fallback Response", () => {
     it("should work with custom headers and query parameters", async () => {
       mockFetch.mockRejectedValue(new Error("Network error"))
 
-      const onErrorHook = jest.fn().mockResolvedValue(
-        new Response("Fallback", { status: 200 })
-      )
+      const onErrorHook = jest
+        .fn()
+        .mockResolvedValue(new Response("Fallback", { status: 200 }))
 
       const request = new Request("https://example.com/test")
       await proxy.proxy(request, "/api/data", {
@@ -423,9 +435,9 @@ describe("Proxy Fallback Response", () => {
 
       expect(onErrorHook).toHaveBeenCalledWith(
         expect.any(Request),
-        expect.any(Error)
+        expect.any(Error),
       )
-      
+
       // Check the actual URL passed to the hook (original request URL, not target URL)
       const actualRequest = onErrorHook.mock.calls[0][0]
       expect(actualRequest.url).toBe("https://example.com/test")
