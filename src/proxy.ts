@@ -185,7 +185,7 @@ export class FetchProxy {
         options,
       )
 
-      if (fallbackResponse) {
+      if (fallbackResponse instanceof Response) {
         // If onError provided a fallback response, return it
         return fallbackResponse
       }
