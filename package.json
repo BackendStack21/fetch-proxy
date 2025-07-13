@@ -26,7 +26,8 @@
     "clean": "rm -rf lib/",
     "prepublishOnly": "bun run clean && bun run build",
     "example:benchmark": "bun run examples/local-gateway-server.ts",
-    "deploy": "bun run prepublishOnly && bun publish"
+    "deploy": "bun run prepublishOnly && bun publish",
+    "actions": "DOCKER_HOST=$(docker context inspect --format '{{.Endpoints.docker.Host}}') act"
   },
   "repository": {
     "type": "git",
