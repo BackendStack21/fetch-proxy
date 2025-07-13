@@ -1,12 +1,4 @@
-import {
-  describe,
-  expect,
-  it,
-  beforeEach,
-  spyOn,
-  afterAll,
-  mock,
-} from "bun:test"
+import { describe, expect, it, beforeEach, spyOn, afterAll } from "bun:test"
 import { FetchProxy } from "../src/proxy"
 import {
   ProxyLogger,
@@ -15,11 +7,11 @@ import {
 } from "../src/logger"
 import { CircuitState } from "../src/types"
 
-// Mock fetch for testing
-const originalFetch = global.fetch
+// Spy on fetch for testing
+let fetchSpy: ReturnType<typeof spyOn>
 
 afterAll(() => {
-  mock.restore()
+  fetchSpy?.mockRestore()
 })
 
 describe("Logging Integration", () => {

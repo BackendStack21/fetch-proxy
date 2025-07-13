@@ -1,13 +1,9 @@
 /**
  * Security tests for header injection vulnerabilities
  */
-import { describe, expect, it, afterAll, mock } from "bun:test"
+import { describe, expect, it } from "bun:test"
 
 import { recordToHeaders } from "../src/utils"
-
-afterAll(() => {
-  mock.restore()
-})
 
 describe("Header Injection Security Tests", () => {
   describe("CRLF Header Injection", () => {

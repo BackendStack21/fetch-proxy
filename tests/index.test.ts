@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, mock } from "bun:test"
+import { describe, it, expect, beforeAll, afterAll, spyOn } from "bun:test"
 import createFetchGate, { FetchProxy } from "../src/index"
 import {
   buildURL,
@@ -55,7 +55,7 @@ describe("fetch-gate", () => {
 
   afterAll(() => {
     server?.stop()
-    mock.restore()
+    // No need for explicit restore with spyOn as it's automatically cleaned up
   })
 
   describe("createFetchGate", () => {
@@ -308,10 +308,9 @@ describe("fetch-gate", () => {
 
   describe("Circuit Breaker Edge Cases", () => {
     it("should transition to HALF_OPEN state after reset timeout", async () => {
-      // Custom mock for Date.now()
-      const originalDateNow = Date.now
-      let now = originalDateNow()
-      global.Date.now = () => now
+      // Spy on Date.now()
+      let now = Date.now()
+      const dateNowSpy = spyOn(Date, "now").mockImplementation(() => now)
 
       const circuitBreaker = new CircuitBreaker({
         failureThreshold: 1,
@@ -330,8 +329,8 @@ describe("fetch-gate", () => {
 
       expect(circuitBreaker.getState()).toBe(CircuitState.HALF_OPEN)
 
-      // Restore original Date.now()
-      global.Date.now = originalDateNow
+      // Restore Date.now() spy
+      dateNowSpy.mockRestore()
     })
 
     it("should reset failures after successful execution in HALF_OPEN state", async () => {

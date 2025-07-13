@@ -1,9 +1,5 @@
-import { describe, expect, test, mock, afterAll } from "bun:test"
+import { describe, expect, test } from "bun:test"
 import { normalizeSecurePath } from "../src/utils"
-
-afterAll(() => {
-  mock.restore()
-})
 
 describe("Path Traversal Security", () => {
   describe("normalizeSecurePath", () => {
