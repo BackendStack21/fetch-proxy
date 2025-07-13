@@ -95,7 +95,7 @@ export interface CircuitBreakerResult {
   state: CircuitState
   failureCount: number
   executionTimeMs: number
-  fallbackResponse?: Response | void
+  fallbackResponseProvided?: boolean
 }
 
 export enum CircuitState {

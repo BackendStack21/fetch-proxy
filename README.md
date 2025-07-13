@@ -135,6 +135,7 @@ interface CircuitBreakerResult {
   state: CircuitState // Current circuit breaker state
   failureCount: number // Current failure count
   executionTimeMs: number // Execution time in milliseconds
+  fallbackResponseProvided?: boolean // Whether a fallback response was provided
 }
 ```
 
