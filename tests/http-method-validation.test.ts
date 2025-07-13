@@ -1,12 +1,13 @@
-import { describe, it, expect, beforeEach, afterAll, mock } from "bun:test"
+import { describe, it, expect, beforeEach, spyOn, afterEach } from "bun:test"
 import { validateHttpMethod } from "../src/utils"
 import { FetchProxy } from "../src/proxy"
 
-afterAll(() => {
-  mock.restore()
-})
-
 describe("HTTP Method Validation Security Tests", () => {
+  let fetchSpy: ReturnType<typeof spyOn>
+
+  afterEach(() => {
+    fetchSpy?.mockRestore()
+  })
   describe("Direct Method Validation", () => {
     it("should reject CONNECT method", () => {
       expect(() => {
@@ -75,6 +76,15 @@ describe("HTTP Method Validation Security Tests", () => {
         base: "http://httpbin.org", // Use a real service for testing
         circuitBreaker: { enabled: false },
       })
+
+      // Mock fetch to return a successful response
+      fetchSpy = spyOn(global, "fetch").mockResolvedValue(
+        new Response("", {
+          status: 200,
+          statusText: "OK",
+          headers: new Headers({ "content-type": "text/plain" }),
+        }),
+      )
     })
 
     it("should reject CONNECT method in proxy (if runtime allows it)", async () => {
@@ -107,6 +117,9 @@ describe("HTTP Method Validation Security Tests", () => {
       // The normalized request should work fine
       const response = await proxy.proxy(request)
       expect(response.status).toBe(200)
+
+      // Verify fetch was called
+      expect(fetchSpy).toHaveBeenCalledTimes(1)
     })
 
     it("should allow safe methods in proxy", async () => {
@@ -116,6 +129,9 @@ describe("HTTP Method Validation Security Tests", () => {
 
       const response = await proxy.proxy(request)
       expect(response.status).toBe(200)
+
+      // Verify fetch was called
+      expect(fetchSpy).toHaveBeenCalledTimes(1)
     })
 
     it("should validate methods when passed through request options", async () => {

@@ -9,18 +9,17 @@ import {
   beforeEach,
   jest,
   afterAll,
-  mock,
+  spyOn,
 } from "bun:test"
 import { FetchProxy } from "../src/proxy"
 import { CircuitState } from "../src/types"
 import type { ProxyRequestOptions, CircuitBreakerResult } from "../src/types"
 
-// Mock fetch for testing
-const mockFetch = jest.fn()
-;(global as any).fetch = mockFetch
+// Spy on fetch for testing
+let fetchSpy: ReturnType<typeof spyOn>
 
 afterAll(() => {
-  mock.restore()
+  fetchSpy?.mockRestore()
 })
 
 describe("Enhanced Hook Naming Conventions", () => {
@@ -39,8 +38,9 @@ describe("Enhanced Hook Naming Conventions", () => {
       headers: new Headers({ "content-type": "application/json" }),
     })
 
-    mockFetch.mockClear()
-    mockFetch.mockResolvedValue(mockResponse)
+    fetchSpy = spyOn(global, "fetch")
+    fetchSpy.mockClear()
+    fetchSpy.mockResolvedValue(mockResponse)
   })
 
   describe("beforeRequest Hook", () => {
@@ -56,7 +56,7 @@ describe("Enhanced Hook Naming Conventions", () => {
 
       expect(beforeRequestHook).toHaveBeenCalledTimes(1)
       expect(beforeRequestHook).toHaveBeenCalledWith(request, options)
-      expect(mockFetch).toHaveBeenCalledTimes(1)
+      expect(fetchSpy).toHaveBeenCalledTimes(1)
     })
 
     it("should handle async beforeRequest hooks", async () => {
@@ -139,7 +139,7 @@ describe("Enhanced Hook Naming Conventions", () => {
       const request = new Request("https://example.com/test")
       const error = new Error("Network error")
 
-      mockFetch.mockRejectedValueOnce(error)
+      fetchSpy.mockRejectedValueOnce(error)
 
       const options: ProxyRequestOptions = {
         afterCircuitBreakerExecution: afterCircuitBreakerHook,
@@ -166,7 +166,7 @@ describe("Enhanced Hook Naming Conventions", () => {
       const request = new Request("https://example.com/test")
 
       // Add some delay to the fetch
-      mockFetch.mockImplementationOnce(
+      fetchSpy.mockImplementationOnce(
         () =>
           new Promise((resolve) => setTimeout(() => resolve(mockResponse), 50)),
       )
@@ -296,8 +296,8 @@ describe("Enhanced Hook Naming Conventions", () => {
       await proxy.proxy(request, undefined, options)
 
       // Verify the mock was called (we can't easily verify exact headers due to internal processing)
-      expect(mockFetch).toHaveBeenCalledTimes(1)
-      expect(mockFetch).toHaveBeenCalledWith(
+      expect(fetchSpy).toHaveBeenCalledTimes(1)
+      expect(fetchSpy).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
           headers: expect.any(Headers),
@@ -315,7 +315,7 @@ describe("Enhanced Hook Naming Conventions", () => {
         },
       })
 
-      mockFetch.mockResolvedValueOnce(originalResponse)
+      fetchSpy.mockResolvedValueOnce(originalResponse)
 
       const request = new Request("https://example.com/test")
 

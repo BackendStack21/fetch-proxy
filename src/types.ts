@@ -83,7 +83,10 @@ export type AfterCircuitBreakerHook = (
   result: CircuitBreakerResult,
 ) => void | Promise<void>
 
-export type ErrorHook = (req: Request, error: Error) => void | Promise<void>
+export type ErrorHook = (
+  req: Request,
+  error: Error,
+) => void | Promise<void> | Promise<Response>
 
 // Circuit breaker result information
 export interface CircuitBreakerResult {
@@ -92,6 +95,7 @@ export interface CircuitBreakerResult {
   state: CircuitState
   failureCount: number
   executionTimeMs: number
+  fallbackResponseProvided?: boolean
 }
 
 export enum CircuitState {
