@@ -9,16 +9,15 @@ import {
   beforeEach,
   jest,
   afterAll,
-  mock,
+  spyOn,
 } from "bun:test"
 import { FetchProxy } from "../src/proxy"
 
-// Mock fetch for testing
-const mockFetch = jest.fn()
-;(global as any).fetch = mockFetch
+// Spy on fetch for testing
+let fetchSpy: ReturnType<typeof spyOn>
 
 afterAll(() => {
-  mock.restore()
+  fetchSpy?.mockRestore()
 })
 
 describe("Proxy Fallback Response", () => {
@@ -29,13 +28,14 @@ describe("Proxy Fallback Response", () => {
       base: "https://api.example.com",
       timeout: 5000,
     })
-    mockFetch.mockClear()
+    fetchSpy = spyOn(global, "fetch")
+    fetchSpy.mockClear()
   })
 
   describe("onError Hook Fallback", () => {
     it("should return fallback response when onError hook provides one", async () => {
       // Mock a network error
-      mockFetch.mockRejectedValue(new Error("Network error"))
+      fetchSpy.mockRejectedValue(new Error("Network error"))
 
       const fallbackResponse = new Response(
         JSON.stringify({
@@ -68,7 +68,7 @@ describe("Proxy Fallback Response", () => {
     })
 
     it("should handle async fallback response generation", async () => {
-      mockFetch.mockRejectedValue(new Error("Timeout error"))
+      fetchSpy.mockRejectedValue(new Error("Timeout error"))
 
       const onErrorHook = jest.fn().mockImplementation(async (req, error) => {
         // Simulate async fallback logic
@@ -108,7 +108,7 @@ describe("Proxy Fallback Response", () => {
     })
 
     it("should fallback to default error response when onError hook returns void", async () => {
-      mockFetch.mockRejectedValue(new Error("Network error"))
+      fetchSpy.mockRejectedValue(new Error("Network error"))
 
       const onErrorHook = jest.fn().mockResolvedValue(undefined)
 
@@ -147,7 +147,7 @@ describe("Proxy Fallback Response", () => {
       ]
 
       for (const testCase of testCases) {
-        mockFetch.mockRejectedValue(testCase.error)
+        fetchSpy.mockRejectedValue(testCase.error)
 
         const onErrorHook = jest.fn().mockResolvedValue(
           new Response(JSON.stringify({ message: testCase.fallbackMessage }), {
@@ -179,7 +179,7 @@ describe("Proxy Fallback Response", () => {
       })
 
       // First request fails to trigger circuit breaker
-      mockFetch.mockRejectedValue(new Error("Service error"))
+      fetchSpy.mockRejectedValue(new Error("Service error"))
 
       const onErrorHook = jest
         .fn()
@@ -241,7 +241,7 @@ describe("Proxy Fallback Response", () => {
 
     it("should pass correct request and error objects to onError hook", async () => {
       const networkError = new Error("ECONNREFUSED")
-      mockFetch.mockRejectedValue(networkError)
+      fetchSpy.mockRejectedValue(networkError)
 
       const onErrorHook = jest
         .fn()
@@ -269,7 +269,7 @@ describe("Proxy Fallback Response", () => {
     })
 
     it("should handle multiple concurrent requests with fallback", async () => {
-      mockFetch.mockRejectedValue(new Error("Service unavailable"))
+      fetchSpy.mockRejectedValue(new Error("Service unavailable"))
 
       const onErrorHook = jest.fn().mockImplementation(async (req, error) => {
         return new Response(
@@ -312,7 +312,7 @@ describe("Proxy Fallback Response", () => {
     })
 
     it("should handle onError hook that throws an error", async () => {
-      mockFetch.mockRejectedValue(new Error("Network error"))
+      fetchSpy.mockRejectedValue(new Error("Network error"))
 
       const onErrorHook = jest.fn().mockImplementation(async () => {
         throw new Error("Hook error")
@@ -333,7 +333,7 @@ describe("Proxy Fallback Response", () => {
     })
 
     it("should handle fallback response with custom headers", async () => {
-      mockFetch.mockRejectedValue(new Error("Service error"))
+      fetchSpy.mockRejectedValue(new Error("Service error"))
 
       const onErrorHook = jest.fn().mockResolvedValue(
         new Response(JSON.stringify({ fallback: true }), {
@@ -359,7 +359,7 @@ describe("Proxy Fallback Response", () => {
     })
 
     it("should handle streaming fallback response", async () => {
-      mockFetch.mockRejectedValue(new Error("Streaming error"))
+      fetchSpy.mockRejectedValue(new Error("Streaming error"))
 
       const onErrorHook = jest.fn().mockImplementation(async (req, error) => {
         const stream = new ReadableStream({
@@ -397,7 +397,7 @@ describe("Proxy Fallback Response", () => {
 
   describe("Integration with Other Features", () => {
     it("should work with beforeRequest and afterResponse hooks", async () => {
-      mockFetch.mockRejectedValue(new Error("Network error"))
+      fetchSpy.mockRejectedValue(new Error("Network error"))
 
       const beforeRequestHook = jest.fn()
       const afterResponseHook = jest.fn()
@@ -420,7 +420,7 @@ describe("Proxy Fallback Response", () => {
     })
 
     it("should work with custom headers and query parameters", async () => {
-      mockFetch.mockRejectedValue(new Error("Network error"))
+      fetchSpy.mockRejectedValue(new Error("Network error"))
 
       const onErrorHook = jest
         .fn()
