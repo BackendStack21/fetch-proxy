@@ -180,7 +180,7 @@ export class FetchProxy {
           state: this.circuitBreaker.getState(),
           failureCount: this.circuitBreaker.getFailures(),
           executionTimeMs: executionTime,
-          fallbackResponse,
+          fallbackResponseProvided: fallbackResponse instanceof Response,
         },
         options,
       )
