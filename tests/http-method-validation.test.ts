@@ -83,7 +83,7 @@ describe("HTTP Method Validation Security Tests", () => {
           status: 200,
           statusText: "OK",
           headers: new Headers({ "content-type": "text/plain" }),
-        })
+        }),
       )
     })
 
@@ -117,7 +117,7 @@ describe("HTTP Method Validation Security Tests", () => {
       // The normalized request should work fine
       const response = await proxy.proxy(request)
       expect(response.status).toBe(200)
-      
+
       // Verify fetch was called
       expect(fetchSpy).toHaveBeenCalledTimes(1)
     })
@@ -129,7 +129,7 @@ describe("HTTP Method Validation Security Tests", () => {
 
       const response = await proxy.proxy(request)
       expect(response.status).toBe(200)
-      
+
       // Verify fetch was called
       expect(fetchSpy).toHaveBeenCalledTimes(1)
     })
